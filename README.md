@@ -10,3 +10,12 @@ go build main.go
 ```
 ./main -m GET -e api/v2/users -j id:abcxyz localhost 42069
 ```
+### Output
+```
+$\color{green}{\textsf{Server is healthy!}}$
+
+ POST
+ localhost :  8090
+ Body:   {"userid":"lho2ni111klqs1i"}
+ Response:   {"avatar":"burgers_S9pUSnd1iP.webp"}
+```
