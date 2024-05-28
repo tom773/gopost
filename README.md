@@ -8,14 +8,14 @@ go build main.go
 <br><hr><br>
 ### Example
 ```
-./main -m GET -e api/v2/users -j id:abcxyz localhost 42069
+./main -m GET -e api/v2/user/avatar -j id:abcxyz localhost 42069
 ```
 ### Output
 ```
-$\color{green}{\textsf{Server is healthy!}}$
+Server is healthy!
 
- POST
- localhost :  8090
- Body:   {"userid":"lho2ni111klqs1i"}
- Response:   {"avatar":"burgers_S9pUSnd1iP.webp"}
+ GET
+ localhost :  42069
+ Body:   {"id":"abcxyz"}
+ Response:   {"avatar":"burgers.webp"}
 ```
