@@ -1,13 +1,36 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
-	"os"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
 )
+
+type Colors struct {
+	Reset  string
+	Red    string
+	Green  string
+	Yellow string
+	Blue   string
+	Purple string
+	Cyan   string
+	White  string
+}
+
+var colors = Colors{
+	Reset:  "\033[0m",
+	Red:    "\033[31m",
+	Green:  "\033[32m",
+	Yellow: "\033[33m",
+	Blue:   "\033[34m",
+	Purple: "\033[35m",
+	Cyan:   "\033[36m",
+	White:  "\033[37m",
+}
 
 type Args struct {
 	Url    string
@@ -24,11 +47,12 @@ func parseArgs() Args {
 	Methodflag := flag.String("m", "", "method")
 
 	flag.Parse()
-	fmt.Println(*JSONflag)
-	fmt.Println(*Methodflag)
 
 	args.JSON = *JSONflag
 	args.Method = *Methodflag
+	if len(flag.Args()) < 2 {
+		log.Fatal("Usage: program [flags] <url> <port>")
+	}
 	args.Url = flag.Arg(0)
 	args.Port = flag.Arg(1)
 
@@ -41,8 +65,26 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Server is healthy!")
+	fmt.Println(colors.Green, "\nServer is healthy!\n", colors.Reset)
 
 	args := parseArgs()
-	fmt.Fprintf(os.Stdout, "%s\nTesting: %s on Port: %s\nBody: %s", args.Method, args.Url, args.Port, args.JSON)
+	fmt.Println(colors.Purple, args.Method, colors.Green, "\n", args.Url, ":", colors.Blue, args.Port, colors.Reset)
+	parseJson(args)
+}
+
+type JsonBody struct {
+	Key   string
+	Value string
+}
+
+func parseJson(args Args) {
+
+	split := strings.Split(args.JSON, ":")
+	jsonbody := make(map[string]string)
+	jsonbody[split[0]] = split[1]
+	jsonData, err := json.Marshal(jsonbody)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(colors.Cyan, "Body: ", colors.Yellow, string(jsonData), colors.Reset)
 }
