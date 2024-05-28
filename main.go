@@ -37,6 +37,7 @@ type Args struct {
 	Port   string
 	Method string
 	JSON   string
+	Endp   string
 }
 
 func parseArgs() Args {
@@ -45,14 +46,13 @@ func parseArgs() Args {
 
 	JSONflag := flag.String("j", "", "data")
 	Methodflag := flag.String("m", "", "method")
+	Endpflag := flag.String("e", "", "endpoint")
 
 	flag.Parse()
 
 	args.JSON = *JSONflag
 	args.Method = *Methodflag
-	if len(flag.Args()) < 2 {
-		log.Fatal("Usage: program [flags] <url> <port>")
-	}
+	args.Endp = *Endpflag
 	args.Url = flag.Arg(0)
 	args.Port = flag.Arg(1)
 
@@ -69,15 +69,12 @@ func main() {
 
 	args := parseArgs()
 	fmt.Println(colors.Purple, args.Method, colors.Green, "\n", args.Url, ":", colors.Blue, args.Port, colors.Reset)
-	parseJson(args)
+	parsed := parseJson(args)
+
+	sendRequest(args, parsed)
 }
 
-type JsonBody struct {
-	Key   string
-	Value string
-}
-
-func parseJson(args Args) {
+func parseJson(args Args) []byte {
 
 	split := strings.Split(args.JSON, ":")
 	jsonbody := make(map[string]string)
@@ -86,5 +83,27 @@ func parseJson(args Args) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(colors.Cyan, "Body: ", colors.Yellow, string(jsonData), colors.Reset)
+	fmt.Println(colors.Green, "Body: ", colors.Yellow, string(jsonData), colors.Reset)
+	return jsonData
+}
+
+// This will be a flag at some point
+type Request struct {
+	UserID string `json:"userid"`
+}
+
+func sendRequest(args Args, jsonData []byte) {
+	client := resty.New()
+	err := json.Unmarshal(jsonData, &Request{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	resp, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(jsonData).
+		Execute(args.Method, "http://"+args.Url+":"+args.Port+"/"+args.Endp)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(colors.Green, "Response: ", colors.Yellow, resp, colors.Reset)
 }
