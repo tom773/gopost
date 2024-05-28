@@ -61,7 +61,7 @@ func parseArgs() Args {
 
 func main() {
 	client := resty.New()
-	_, err := client.R().Get("http://localhost:8090/api/health")
+	_, err := client.R().Get("http://localhost:8070/api/health")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,35 +75,34 @@ func main() {
 }
 
 func parseJson(args Args) []byte {
+	splitFull := strings.Split(args.JSON, ",")
+	jsonbody := make(map[string]interface{})
 
-	split := strings.Split(args.JSON, ":")
-	jsonbody := make(map[string]string)
-	jsonbody[split[0]] = split[1]
+	for i := range len(splitFull) {
+		split := strings.Split(splitFull[i], ":")
+		jsonbody[split[0]] = split[1]
+	}
+
 	jsonData, err := json.Marshal(jsonbody)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(colors.Green, "Body: ", colors.Yellow, string(jsonData), colors.Reset)
 	return jsonData
 }
 
-// This will be a flag at some point
 type Request struct {
-	UserID string `json:"userid"`
+	Message string `json:"message"`
 }
 
+// This will be a flag at some point
 func sendRequest(args Args, jsonData []byte) {
 	client := resty.New()
-	err := json.Unmarshal(jsonData, &Request{})
+	request := Request{Message: string(jsonData)}
+	resp, err := client.R().SetHeader("Content-Type", "application/json").SetBody(request).Execute(args.Method, "http://"+args.Url+":"+args.Port+"/"+args.Endp)
+	fmt.Println(colors.Green, "Parsed: ", colors.Yellow, string(jsonData), colors.Reset)
 	if err != nil {
 		log.Fatal(err)
 	}
-	resp, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(jsonData).
-		Execute(args.Method, "http://"+args.Url+":"+args.Port+"/"+args.Endp)
-	if err != nil {
-		log.Fatal(err)
-	}
+	fmt.Println()
 	fmt.Println(colors.Green, "Response: ", colors.Yellow, resp, colors.Reset)
 }
